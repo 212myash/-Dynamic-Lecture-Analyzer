@@ -1069,7 +1069,8 @@ const transcribeAudioChunk = async ({
     throw new Error('This server environment does not support audio file uploads.');
   }
 
-  const file = new AudioFile([inputBuffer], filename, { type: mimeType });
+  const sanitizedMimeType = String(mimeType || 'audio/webm').split(';')[0].trim() || 'audio/webm'
+  const file = new AudioFile([inputBuffer], filename, { type: sanitizedMimeType });
 
   try {
     if (groq) {
@@ -1102,7 +1103,13 @@ const transcribeAudioChunk = async ({
       model: process.env.OPENAI_TRANSCRIBE_MODEL || 'whisper-1'
     };
   } catch (error) {
-    throw new Error(error?.message || 'Failed to transcribe audio');
+    const errorMessage = String(
+      error?.response?.data?.error?.message ||
+      error?.response?.data?.message ||
+      error?.message ||
+      'Failed to transcribe audio'
+    ).trim()
+    throw new Error(errorMessage)
   }
 };
 
