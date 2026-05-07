@@ -9,11 +9,31 @@ const client = axios.create({
   timeout: 60000
 })
 
+// Add JWT token to all requests
+client.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
 // Enhanced error handling
 client.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (!error.response) {
+    // Handle 401 Unauthorized - token expired or invalid
+    if (error.response?.status === 401) {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
+      window.location.href = '/signin'
+      const message = 'Session expired. Please sign in again.'
+      console.error(message, error)
+      error.message = message
+    } else if (!error.response) {
       // Network error
       const message = `Network Error: Cannot connect to backend at ${defaultBackend}`
       console.error(message, error)

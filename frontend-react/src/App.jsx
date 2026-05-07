@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import apiClient from './api/apiClient'
 import { useTheme } from './context/ThemeContext'
+import { useAuth } from './context/AuthContext'
+import { ProtectedRoute } from './components/ProtectedRoute'
 import { getErrorMessage } from './utils/errorHandler'
 import Sidebar from './components/Sidebar'
 import AIAnalysisSection from './components/AIAnalysisSection'
@@ -13,6 +15,10 @@ import ReportsSection from './components/ReportsSection'
 import DashboardSection from './components/DashboardSection'
 import ChatSection from './components/ChatSection'
 import SpeechAnalysisSection from './components/SpeechAnalysisSection'
+import { SignUp } from './pages/SignUp'
+import { SignIn } from './pages/SignIn'
+import { Profile } from './pages/Profile'
+import { EditProfile } from './pages/EditProfile'
 import './styles/index.css'
 
 const topNavItems = [
@@ -21,9 +27,9 @@ const topNavItems = [
   { id: 'reports', label: 'Reports' }
 ]
 
-function TopBar({ activeSection, onNavigate }) {
+function TopBar({ activeSection, onNavigate, onProfile, onLogout }) {
   const { currentTheme, toggleTheme, themes } = useTheme()
-  
+
   return (
     <header className="sticky top-0 z-40 md:ml-[280px] ml-0 h-20 flex items-center justify-between px-8 transition-colors duration-400" style={{ backgroundColor: 'color-mix(in srgb, var(--color-bg) 86%, #ffffff 14%)', borderColor: 'var(--color-border)', borderBottom: '1px solid var(--color-border)', backdropFilter: 'blur(10px)' }}>
       <div className="flex items-center gap-8">
@@ -61,6 +67,20 @@ function TopBar({ activeSection, onNavigate }) {
         >
           <span className="inline-block capitalize">{themes && themes[currentTheme] ? themes[currentTheme].name : 'Dark'}</span>
           <span className="ml-2 text-base">•</span>
+        </button>
+        <button
+          type="button"
+          onClick={onProfile}
+          className="px-4 py-2 rounded-xl text-xs uppercase font-bold tracking-[0.16em] border border-blue-600 text-blue-600 hover:bg-blue-50"
+        >
+          Profile
+        </button>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="px-4 py-2 rounded-xl text-xs uppercase font-bold tracking-[0.16em] border border-red-600 text-red-600 hover:bg-red-50"
+        >
+          Logout
         </button>
       </div>
     </header>
@@ -112,7 +132,9 @@ function normalizePayload(payload) {
   }
 }
 
-export default function App() {
+function DashboardApp() {
+  const navigate = useNavigate()
+  const { logout } = useAuth()
   const [activeSection, setActiveSection] = useState('dashboard')
   const [analysisResult, setAnalysisResult] = useState(null)
   const [error, setError] = useState('')
@@ -137,6 +159,15 @@ export default function App() {
       loadHistory()
     }
   }, [activeSection])
+
+  const handleLogout = () => {
+    logout()
+    navigate('/signin')
+  }
+
+  const handleProfile = () => {
+    navigate('/profile')
+  }
 
   async function loadStats() {
     setStatsLoading(true)
@@ -210,13 +241,13 @@ export default function App() {
     }
   }
 
-  async function handleCopy(value) {
+  function handleCopy(value) {
     const payload = String(value || '').trim()
     if (!payload) return
 
     try {
       if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(payload)
+        navigator.clipboard.writeText(payload)
       }
       setCopiedKey(payload)
       setTimeout(() => setCopiedKey(''), 1400)
@@ -284,85 +315,135 @@ export default function App() {
   const fullReportText = buildReportText(analysisResult)
 
   return (
+    <div className="app-root min-h-screen transition-colors duration-400" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
+      <TopBar activeSection={activeSection} onNavigate={setActiveSection} onProfile={handleProfile} onLogout={handleLogout} />
+      <Sidebar activeSection={activeSection} setActiveSection={setActiveSection} onNewAnalysis={resetAnalysis} onProfile={handleProfile} onLogout={handleLogout} />
+      <main className="md:ml-[280px] ml-0 p-gutter min-h-[calc(100vh-80px)]">
+        {activeSection === 'dashboard' && (
+          <DashboardSection
+            analysisResult={analysisResult}
+            stats={stats}
+            statsLoading={statsLoading}
+            statsError={statsError}
+          />
+        )}
+
+        {activeSection === 'chat' && <ChatSection analysisResult={analysisResult} />}
+
+        {activeSection === 'reports' && (
+          <ReportsSection
+            analysisResult={analysisResult}
+            onCopy={handleCopy}
+            copied={copiedKey === fullReportText}
+            onExportPdf={handleExportPdf}
+            exportId={exportDocumentId}
+          />
+        )}
+
+        {activeSection === 'ai-analysis' && (
+          <AIAnalysisSection
+            analysisResult={analysisResult}
+            onAnalysisComplete={(result) => {
+              setAnalysisResult(normalizePayload(result))
+            }}
+          />
+        )}
+
+        {activeSection === 'speech-analysis' && (
+          <SpeechAnalysisSection
+            onAnalysisComplete={(result) => {
+              setAnalysisResult(normalizePayload(result))
+            }}
+          />
+        )}
+
+        {activeSection === 'qa-practice' && (
+          <QASection analysisResult={analysisResult} />
+        )}
+
+        {activeSection === 'mcq-generator' && (
+          <MCQGeneratorSection />
+        )}
+
+        {activeSection === 'analysis-actions' && (
+          <ActionPlanSection
+            analysisResult={analysisResult}
+            onCopy={handleCopy}
+            copied={copiedKey === (analysisResult?.action_items || []).join('\n')}
+          />
+        )}
+
+        {activeSection === 'analysis-history' && (
+          <HistorySection
+            history={history}
+            historyLoading={historyLoading}
+            historyError={historyError}
+            searchResults={searchResults}
+            searchLoading={searchLoading}
+            searchError={searchError}
+            onSearch={handleSearch}
+            onRefreshHistory={loadHistory}
+            onSelectHistory={handleSelectHistory}
+            onExportPdf={handleExportPdf}
+          />
+        )}
+      </main>
+    </div>
+  )
+}
+
+export default function App() {
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  return (
     <Routes>
       <Route
-        path="/*"
+        path="/signin"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <SignIn />}
+      />
+      <Route
+        path="/signup"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <SignUp />}
+      />
+      <Route
+        path="/profile"
         element={
-          <div className="app-root min-h-screen transition-colors duration-400" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
-            <TopBar activeSection={activeSection} onNavigate={setActiveSection} />
-            <Sidebar activeSection={activeSection} setActiveSection={setActiveSection} onNewAnalysis={resetAnalysis} />
-              <main className="md:ml-[280px] ml-0 p-gutter min-h-[calc(100vh-80px)]">
-                {activeSection === 'dashboard' && (
-                  <DashboardSection
-                    analysisResult={analysisResult}
-                    stats={stats}
-                    statsLoading={statsLoading}
-                    statsError={statsError}
-                  />
-                )}
-
-                {activeSection === 'chat' && <ChatSection analysisResult={analysisResult} />}
-
-                {activeSection === 'reports' && (
-                  <ReportsSection
-                    analysisResult={analysisResult}
-                    onCopy={handleCopy}
-                    copied={copiedKey === fullReportText}
-                    onExportPdf={handleExportPdf}
-                    exportId={exportDocumentId}
-                  />
-                )}
-
-                {activeSection === 'ai-analysis' && (
-                  <AIAnalysisSection
-                    analysisResult={analysisResult}
-                    onAnalysisComplete={(result) => {
-                      setAnalysisResult(normalizePayload(result))
-                    }}
-                  />
-                )}
-
-                {activeSection === 'speech-analysis' && (
-                  <SpeechAnalysisSection
-                    onAnalysisComplete={(result) => {
-                      setAnalysisResult(normalizePayload(result))
-                    }}
-                  />
-                )}
-
-                {activeSection === 'qa-practice' && (
-                  <QASection analysisResult={analysisResult} />
-                )}
-
-                {activeSection === 'mcq-generator' && (
-                  <MCQGeneratorSection />
-                )}
-
-                {activeSection === 'analysis-actions' && (
-                  <ActionPlanSection
-                    analysisResult={analysisResult}
-                    onCopy={handleCopy}
-                    copied={copiedKey === (analysisResult?.action_items || []).join('\n')}
-                  />
-                )}
-
-                {activeSection === 'analysis-history' && (
-                  <HistorySection
-                    history={history}
-                    historyLoading={historyLoading}
-                    historyError={historyError}
-                    searchResults={searchResults}
-                    searchLoading={searchLoading}
-                    searchError={searchError}
-                    onSearch={handleSearch}
-                    onRefreshHistory={loadHistory}
-                    onSelectHistory={handleSelectHistory}
-                    onExportPdf={handleExportPdf}
-                  />
-                )}
-              </main>
-            </div>
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
         }
+      />
+      <Route
+        path="/edit-profile"
+        element={
+          <ProtectedRoute>
+            <EditProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardApp />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/"
+        element={<Navigate to={isAuthenticated ? '/dashboard' : '/signin'} replace />}
+      />
+      <Route
+        path="*"
+        element={<Navigate to={isAuthenticated ? '/dashboard' : '/signin'} replace />}
       />
     </Routes>
   )

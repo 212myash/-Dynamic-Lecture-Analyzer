@@ -6,6 +6,8 @@ const PDFDocument = require('pdfkit');
 const fileUpload = require('express-fileupload');
 const connectDB = require('./config/db');
 const { analyzeLectureText, chatWithLectureAssistant, generateTopicMcqs, transcribeAudioChunk } = require('./services/aiService');
+const authRoutes = require('./routes/authRoutes');
+const authMiddleware = require('./middleware/authMiddleware');
 
 dotenv.config();
 
@@ -59,6 +61,11 @@ const corsOptions = {
 
 const lectureHistorySchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
     input_text: { type: String, required: true, trim: true },
     lecture_title: { type: String, default: '' },
     language: { type: String, default: 'English' },
@@ -187,21 +194,34 @@ app.get('/', (req, res) => {
     ok: true,
     service: 'dynamic-lecture-analyzer-backend',
     health: '/health',
-    analyze: '/api/analyze',
-    history: '/api/history',
-    chat: '/api/chat',
-    stats: '/api/stats',
-    search: '/api/search',
-    export: '/api/export/:id'
+    auth: {
+      signup: 'POST /api/auth/signup',
+      signin: 'POST /api/auth/signin',
+      logout: 'POST /api/auth/logout',
+      profile: 'GET /api/auth/profile',
+      updateProfile: 'PUT /api/auth/profile/update'
+    },
+    api: {
+      analyze: '/api/analyze',
+      history: '/api/history',
+      chat: '/api/chat',
+      stats: '/api/stats',
+      search: '/api/search',
+      export: '/api/export/:id'
+    }
   });
 });
+
+// Auth routes
+app.use('/api/auth', authRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ ok: true, service: 'dynamic-lecture-analyzer-backend' });
 });
 
-app.post('/api/transcribe', async (req, res) => {
+app.post('/api/transcribe', authMiddleware, async (req, res) => {
   try {
+    const userId = req.userId;
     const language = String(req.query?.language || 'en').trim() || 'en';
     
     if (!req.files || !req.files.audio) {
@@ -242,8 +262,9 @@ app.post('/api/transcribe', async (req, res) => {
   }
 });
 
-app.post('/api/analyze', async (req, res) => {
+app.post('/api/analyze', authMiddleware, async (req, res) => {
   try {
+    const userId = req.userId; // Get userId from auth middleware
     const rawText = req.body?.text;
     const language = normalizeLanguage(req.body?.language);
 
@@ -281,6 +302,7 @@ app.post('/api/analyze', async (req, res) => {
     }
 
     const saved = await LectureHistory.create({
+      userId, // Add userId to every lecture record
       input_text: text,
       lecture_title: lectureTitle,
       language,
@@ -347,8 +369,9 @@ app.post('/api/analyze', async (req, res) => {
   }
 });
 
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', authMiddleware, async (req, res) => {
   try {
+    const userId = req.userId;
     const message = String(req.body?.message || '').trim();
     const contextText = String(req.body?.context_text || '').trim();
     const language = normalizeLanguage(req.body?.language);
@@ -381,8 +404,9 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-app.post('/api/mcq', async (req, res) => {
+app.post('/api/mcq', authMiddleware, async (req, res) => {
   try {
+    const userId = req.userId;
     const topic = String(req.body?.topic || '').trim();
     const language = normalizeLanguage(req.body?.language);
     const count = Number.parseInt(String(req.body?.count || 5), 10);
@@ -416,11 +440,12 @@ app.post('/api/mcq', async (req, res) => {
   }
 });
 
-app.get('/api/history', async (req, res) => {
+app.get('/api/history', authMiddleware, async (req, res) => {
   try {
+    const userId = req.userId;
     const limit = parseLimit(req.query.limit, 20, 100);
 
-    const history = await LectureHistory.find({})
+    const history = await LectureHistory.find({ userId })
       .sort({ timestamp: -1 })
       .limit(limit)
       .lean();
@@ -442,9 +467,11 @@ app.get('/api/history', async (req, res) => {
   }
 });
 
-app.get('/api/stats', async (req, res) => {
+app.get('/api/stats', authMiddleware, async (req, res) => {
   try {
+    const userId = req.userId;
     const aggregate = await LectureHistory.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
       {
         $group: {
           _id: null,
@@ -483,8 +510,9 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
-app.get('/api/search', async (req, res) => {
+app.get('/api/search', authMiddleware, async (req, res) => {
   try {
+    const userId = req.userId;
     const q = String(req.query.q || '').trim();
     const limit = parseLimit(req.query.limit, 10, 50);
 
@@ -498,6 +526,7 @@ app.get('/api/search', async (req, res) => {
     const regex = new RegExp(escapeRegex(q), 'i');
 
     const results = await LectureHistory.find({
+      userId,
       $or: [
         { input_text: regex },
         { 'ai_output.summary': regex },
@@ -534,15 +563,19 @@ app.get('/api/search', async (req, res) => {
   }
 });
 
-app.get('/api/export/:id', async (req, res) => {
+app.get('/api/export/:id', authMiddleware, async (req, res) => {
   try {
+    const userId = req.userId;
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: 'Invalid id' });
     }
 
-    const record = await LectureHistory.findById(id).lean();
+    const record = await LectureHistory.findOne({
+      _id: id,
+      userId // Ensure record belongs to authenticated user
+    }).lean();
 
     if (!record) {
       return res.status(404).json({ success: false, message: 'Record not found' });

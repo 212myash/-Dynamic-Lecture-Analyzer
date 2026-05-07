@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { id: 'analysis-history', label: 'History', icon: 'history' }
 ]
 
-export default function Sidebar({ activeSection, setActiveSection, onNewAnalysis }) {
+export default function Sidebar({ activeSection, setActiveSection, onNewAnalysis, onProfile, onLogout }) {
   return (
     <aside className="relative w-full md:fixed md:left-0 md:top-0 md:h-screen md:w-[280px] md:border-r border-b flex flex-col p-6 space-y-8 z-50 overflow-y-auto transition-colors duration-400" style={{ backgroundColor: 'color-mix(in srgb, var(--color-bgSecondary) 88%, #ffffff 12%)', borderColor: 'var(--color-border)', backdropFilter: 'blur(8px)' }}>
       <div className="flex items-center gap-3 pb-4 border-b transition-colors duration-400" style={{ borderColor: 'var(--color-border)' }}>
@@ -97,6 +97,24 @@ export default function Sidebar({ activeSection, setActiveSection, onNewAnalysis
         </nav>
       </div>
 
+      <div className="pt-6 border-t transition-colors duration-400" style={{ borderColor: 'var(--color-border)' }}>
+        <button
+          type="button"
+          onClick={onProfile}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 transition"
+        >
+          <span>👤</span>
+          <span>Profile</span>
+        </button>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-red-600 border border-red-200 hover:bg-red-50 transition"
+        >
+          <span>🚪</span>
+          <span>Logout</span>
+        </button>
+      </div>
     </aside>
   )
 }
