@@ -444,11 +444,11 @@ export default function App() {
       />
       <Route
         path="/"
-        element={<Navigate to={isAuthenticated ? '/dashboard' : '/signin'} replace />}
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Onboard />}
       />
       <Route
         path="*"
-        element={<Navigate to={isAuthenticated ? '/dashboard' : '/signin'} replace />}
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/" replace />}
       />
     </Routes>
   )
