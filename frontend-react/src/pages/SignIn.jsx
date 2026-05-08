@@ -70,78 +70,111 @@ export function SignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">Welcome Back</h1>
-        <p className="text-gray-600 text-center mb-6">Sign in to your account</p>
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4" style={{ backgroundColor: 'var(--color-bg)' }}>
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-orange-500/8 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
 
-        {generalError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-            {generalError}
+      <div className="relative z-10 w-full max-w-md">
+        <div
+          className="rounded-3xl shadow-2xl p-8"
+          style={{
+            backgroundColor: 'var(--color-bgSecondary)',
+            border: '1px solid var(--color-border)',
+            backdropFilter: 'blur(20px)'
+          }}
+        >
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>Welcome Back</h1>
+            <p className="text-lg" style={{ color: 'var(--color-textSecondary)' }}>Sign in to your account</p>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email or Mobile Number */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email or Mobile Number
-            </label>
-            <input
-              type="text"
-              name="identifier"
-              value={formData.identifier}
-              onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.identifier ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Enter your email or 10-digit mobile number"
+          {generalError && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl mb-6">
+              {generalError}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email or Mobile Number */}
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text)' }}>
+                Email or Mobile Number
+              </label>
+              <input
+                type="text"
+                name="identifier"
+                value={formData.identifier}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 ${
+                  errors.identifier
+                    ? 'border-red-500 focus:ring-red-500/50'
+                    : 'border-gray-600 focus:ring-teal-500/50'
+                }`}
+                style={{
+                  backgroundColor: 'var(--color-bgTertiary)',
+                  border: `1px solid ${errors.identifier ? '#ef4444' : 'var(--color-border)'}`,
+                  color: 'var(--color-text)',
+                  caretColor: 'var(--color-text)'
+                }}
+                placeholder="Enter your email or 10-digit mobile number"
+                disabled={isLoading}
+              />
+              {errors.identifier && (
+                <p className="text-red-400 text-sm mt-2">{errors.identifier}</p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text)' }}>
+                Password
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 ${
+                  errors.password
+                    ? 'border-red-500 focus:ring-red-500/50'
+                    : 'border-gray-600 focus:ring-teal-500/50'
+                }`}
+                style={{
+                  backgroundColor: 'var(--color-bgTertiary)',
+                  border: `1px solid ${errors.password ? '#ef4444' : 'var(--color-border)'}`,
+                  color: 'var(--color-text)',
+                  caretColor: 'var(--color-text)'
+                }}
+                placeholder="Enter your password"
+                disabled={isLoading}
+              />
+              {errors.password && (
+                <p className="text-red-400 text-sm mt-2">{errors.password}</p>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
               disabled={isLoading}
-            />
-            {errors.identifier && (
-              <p className="text-red-500 text-sm mt-1">{errors.identifier}</p>
-            )}
+              className="w-full py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg hover:shadow-teal-500/25"
+            >
+              {isLoading ? 'Signing In...' : 'Sign In'}
+            </button>
+          </form>
+
+          {/* Sign Up Link */}
+          <div className="mt-8 text-center">
+            <p style={{ color: 'var(--color-textSecondary)' }}>
+              Don't have an account?{' '}
+              <Link to="/signup" className="text-teal-400 hover:text-teal-300 font-semibold transition-colors">
+                Sign Up
+              </Link>
+            </p>
           </div>
-
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.password ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Enter your password"
-              disabled={isLoading}
-            />
-            {errors.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-            )}
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Signing In...' : 'Sign In'}
-          </button>
-        </form>
-
-        {/* Sign Up Link */}
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-semibold">
-              Sign Up
-            </Link>
-          </p>
         </div>
       </div>
     </div>
