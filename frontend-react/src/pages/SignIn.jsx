@@ -135,17 +135,11 @@ export function SignIn() {
         </form>
 
         {/* Sign Up Link */}
-        <div className="mt-6 text-center space-y-2">
+        <div className="mt-6 text-center">
           <p className="text-gray-600">
             Don't have an account?{' '}
             <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-semibold">
               Sign Up
-            </Link>
-          </p>
-          <p className="text-gray-600">
-            Want to know more about this project?{' '}
-            <Link to="/onboard" className="text-blue-600 hover:text-blue-700 font-semibold">
-              Learn more
             </Link>
           </p>
         </div>

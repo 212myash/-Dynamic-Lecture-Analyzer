@@ -7,9 +7,23 @@ export function Onboard() {
       <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-4xl w-full">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Dynamic Lecture Analyzer</h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 max-w-2xl mx-auto mb-8">
             A smart lecture assistant that analyzes class lectures, generates summaries, topics, MCQs, and actionable insights from text or audio input.
           </p>
+          <div className="flex flex-wrap gap-4 justify-center mb-8">
+            <Link
+              to="/signin"
+              className="inline-block px-8 py-4 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-lg"
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/signup"
+              className="inline-block px-8 py-4 rounded-xl border-2 border-blue-600 text-blue-600 font-semibold hover:bg-blue-50 transition text-lg"
+            >
+              Sign Up
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-8 md:grid-cols-2">
@@ -39,27 +53,6 @@ export function Onboard() {
               Dynamic Lecture Analyzer is built to help students, educators, and professionals quickly understand lecture content and retain the most important ideas.
               It saves study time by converting long lecture material into useful learning resources.
             </p>
-          </div>
-
-          <div className="rounded-3xl border border-gray-200 p-6 bg-white shadow-sm md:col-span-2">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">Start now</h2>
-            <p className="text-gray-700 mb-6">
-              If you already have an account, sign in and begin analyzing lectures right away. If not, create your account and explore the dashboard.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link
-                to="/signin"
-                className="inline-block px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/signup"
-                className="inline-block px-6 py-3 rounded-xl border border-blue-600 text-blue-600 font-semibold hover:bg-blue-50 transition"
-              >
-                Sign Up
-              </Link>
-            </div>
           </div>
         </div>
       </div>
