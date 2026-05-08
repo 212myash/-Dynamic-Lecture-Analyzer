@@ -13,7 +13,7 @@ const lectureSchema = new mongoose.Schema(
     explanation: { type: String, required: true },
     sentiment: { type: String, default: 'Neutral' },
     readabilityScore: { type: Number, default: 0 },
-    analysisProvider: { type: String, default: 'openai' },
+    analysisProvider: { type: String, default: 'groq' },
     analysisModel: { type: String, default: '' },
     createdFrom: { type: String, enum: ['text'], default: 'text' },
     createdAt: { type: Date, default: Date.now }

@@ -13,8 +13,8 @@ Set these on your hosting provider:
 - `PORT`
 - `MONGODB_URI`
 - `CLIENT_ORIGIN`
-- `OPENAI_API_KEY`
-- `OPENAI_MODEL`
+- `GROQ_API_KEY`
+- `GROQ_MODEL`
 
 ## Backend Hosting Steps
 

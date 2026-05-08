@@ -1,7 +1,5 @@
-const OpenAI = require('openai');
 const Groq = require('groq-sdk');
 
-let openaiClient = null;
 let groqClient = null;
 
 const STOP_WORDS = new Set([
@@ -152,19 +150,6 @@ IMPORTANT:
 - Always generate meaningful content even if input is small
 - Expand knowledge intelligently
 `;
-
-const getOpenAIClient = () => {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return null;
-  }
-
-  if (!openaiClient) {
-    openaiClient = new OpenAI({ apiKey });
-  }
-
-  return openaiClient;
-};
 
 const getGroqClient = () => {
   const apiKey = process.env.GROQ_API_KEY;
@@ -679,9 +664,8 @@ const generateTopicMcqs = async ({ topic, language = 'English', count = 5 }) => 
   }
 
   const groq = getGroqClient();
-  const openai = getOpenAIClient();
 
-  if (!groq && !openai) {
+  if (!groq) {
     return {
       questions: { mcqs: buildTopicMcqFallback(cleanTopic, requestedCount) },
       language: safeLanguage,
@@ -691,10 +675,8 @@ const generateTopicMcqs = async ({ topic, language = 'English', count = 5 }) => 
   }
 
   try {
-    const provider = groq ? 'groq' : 'openai';
-    const model = groq
-      ? process.env.GROQ_MODEL || 'llama-3.1-8b-instant'
-      : process.env.OPENAI_MODEL || 'gpt-4o-mini';
+    const provider = 'groq';
+    const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 
     const requestParams = {
       model,
@@ -748,9 +730,7 @@ IMPORTANT: Do not include any extraneous keys at the root. Return only the JSON 
       ]
     };
 
-    const response = await (provider === 'groq'
-      ? groq.chat.completions.create(requestParams)
-      : openai.chat.completions.create(requestParams));
+    const response = await groq.chat.completions.create(requestParams);
 
     const rawContent = response?.choices?.[0]?.message?.content || '';
     const parsed = extractJsonPayload(rawContent);
@@ -805,17 +785,14 @@ const analyzeLectureText = async (text, options = {}) => {
 
   const fallback = buildLocalFallback(cleanText, language);
   const groq = getGroqClient();
-  const openai = getOpenAIClient();
 
-  if (!groq && !openai) {
+  if (!groq) {
     return fallback;
   }
 
   try {
-    const provider = groq ? 'groq' : 'openai';
-    const model = groq
-      ? process.env.GROQ_MODEL || 'llama-3.1-8b-instant'
-      : process.env.OPENAI_MODEL || 'gpt-4o-mini';
+    const provider = 'groq';
+    const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 
     const requestParams = {
       model,
@@ -853,9 +830,7 @@ const analyzeLectureText = async (text, options = {}) => {
       ]
     };
 
-    const response = await (provider === 'groq'
-      ? groq.chat.completions.create(requestParams)
-      : openai.chat.completions.create(requestParams));
+    const response = await groq.chat.completions.create(requestParams);
 
     const rawContent = response?.choices?.[0]?.message?.content || '';
     const parsed = extractJsonPayload(rawContent);
@@ -944,9 +919,8 @@ const chatWithLectureAssistant = async ({
   }
 
   const groq = getGroqClient();
-  const openai = getOpenAIClient();
 
-  if (!groq && !openai) {
+  if (!groq) {
     return {
       response: `(${safeLanguage}) I can help you revise this lecture. Key focus: ${cleanMessage}`,
       language: safeLanguage,
@@ -955,10 +929,8 @@ const chatWithLectureAssistant = async ({
   }
 
   try {
-    const provider = groq ? 'groq' : 'openai';
-    const model = groq
-      ? process.env.GROQ_MODEL || 'llama-3.1-8b-instant'
-      : process.env.OPENAI_MODEL || 'gpt-4o-mini';
+    const provider = 'groq';
+    const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 
     const historyMessages = Array.isArray(history)
       ? history
@@ -1024,9 +996,7 @@ Remember: You are ONLY a lecture assistant. Only answer what is in the lecture.
       ]
     };
 
-    const response = await (provider === 'groq'
-      ? groq.chat.completions.create(requestParams)
-      : openai.chat.completions.create(requestParams));
+    const response = await groq.chat.completions.create(requestParams);
 
     const text = String(response?.choices?.[0]?.message?.content || '').trim();
 
@@ -1058,10 +1028,9 @@ const transcribeAudioChunk = async ({
   }
 
   const groq = getGroqClient();
-  const openai = getOpenAIClient();
 
-  if (!groq && !openai) {
-    throw new Error('Speech transcription is unavailable because no AI provider is configured.');
+  if (!groq) {
+    throw new Error('Speech transcription is unavailable because no Groq provider is configured.');
   }
 
   const AudioFile = globalThis.File;
@@ -1073,25 +1042,9 @@ const transcribeAudioChunk = async ({
   const file = new AudioFile([inputBuffer], filename, { type: sanitizedMimeType });
 
   try {
-    if (groq) {
-      const response = await groq.audio.transcriptions.create({
-        file,
-        model: process.env.GROQ_TRANSCRIBE_MODEL || 'whisper-large-v3-turbo',
-        language,
-        response_format: 'json',
-        temperature: 0
-      });
-
-      return {
-        text: String(response?.text || '').trim(),
-        provider: 'groq',
-        model: process.env.GROQ_TRANSCRIBE_MODEL || 'whisper-large-v3-turbo'
-      };
-    }
-
-    const response = await openai.audio.transcriptions.create({
+    const response = await groq.audio.transcriptions.create({
       file,
-      model: process.env.OPENAI_TRANSCRIBE_MODEL || 'whisper-1',
+      model: process.env.GROQ_TRANSCRIBE_MODEL || 'whisper-large-v3-turbo',
       language,
       response_format: 'json',
       temperature: 0
@@ -1099,8 +1052,8 @@ const transcribeAudioChunk = async ({
 
     return {
       text: String(response?.text || '').trim(),
-      provider: 'openai',
-      model: process.env.OPENAI_TRANSCRIBE_MODEL || 'whisper-1'
+      provider: 'groq',
+      model: process.env.GROQ_TRANSCRIBE_MODEL || 'whisper-large-v3-turbo'
     };
   } catch (error) {
     const errorMessage = String(

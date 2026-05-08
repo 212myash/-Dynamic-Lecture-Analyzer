@@ -16,8 +16,8 @@ Backend on Render:
 - Start command: `npm start`
 - Env vars:
   - `MONGODB_URI`
-  - `OPENAI_API_KEY` if you want real OpenAI responses
-  - `OPENAI_MODEL` if you want a custom model name
+  - `GROQ_API_KEY`
+  - `GROQ_MODEL` if you want a custom model name
   - `CLIENT_ORIGIN=https://dynamic-lecture-analyzer.vercel.app`
 
 Frontend on Vercel:

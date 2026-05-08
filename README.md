@@ -33,13 +33,13 @@ npm run dev
 Backend Render:
 - `MONGODB_URI`
 - `CLIENT_ORIGIN=https://dynamic-lecture-analyzer.vercel.app`
-- `OPENAI_API_KEY`
-- `OPENAI_MODEL`
+- `GROQ_API_KEY`
+- `GROQ_MODEL`
 
 Frontend Vercel:
 - `VITE_BACKEND_URL=https://dynamic-lecture-analyzer.onrender.com`
 
 ## Notes
 
-- If OpenAI is not configured, the backend still works with a local fallback.
+- If Groq is not configured, the backend still works with a local fallback.
 - The React frontend is the production Vercel app. The older Streamlit setup is no longer used for deployment.
