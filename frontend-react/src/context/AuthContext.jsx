@@ -58,11 +58,11 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const signin = async (email, password) => {
+  const signin = async (identifier, password) => {
     setError(null);
     try {
       const response = await axios.post(`${BACKEND_URL}/api/auth/signin`, {
-        email,
+        identifier,
         password
       });
 

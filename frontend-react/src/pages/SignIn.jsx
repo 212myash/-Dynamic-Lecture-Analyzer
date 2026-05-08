@@ -7,7 +7,7 @@ export function SignIn() {
   const { signin } = useAuth();
 
   const [formData, setFormData] = useState({
-    email: '',
+    identifier: '',
     password: ''
   });
 
@@ -18,10 +18,13 @@ export function SignIn() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+    if (!formData.identifier.trim()) {
+      newErrors.identifier = 'Email or mobile number is required';
+    } else if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.identifier) &&
+      !/^[0-9]{10}$/.test(formData.identifier)
+    ) {
+      newErrors.identifier = 'Enter a valid email or 10-digit mobile number';
     }
 
     if (!formData.password) {
@@ -37,7 +40,6 @@ export function SignIn() {
       ...prev,
       [name]: value
     }));
-    // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -58,7 +60,7 @@ export function SignIn() {
 
     setIsLoading(true);
     try {
-      await signin(formData.email, formData.password);
+      await signin(formData.identifier, formData.password);
       navigate('/dashboard');
     } catch (error) {
       setGeneralError(error.message || 'Sign in failed. Please try again.');
@@ -80,24 +82,24 @@ export function SignIn() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email */}
+          {/* Email or Mobile Number */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+              Email or Mobile Number
             </label>
             <input
-              type="email"
-              name="email"
-              value={formData.email}
+              type="text"
+              name="identifier"
+              value={formData.identifier}
               onChange={handleChange}
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.email ? 'border-red-500' : 'border-gray-300'
+                errors.identifier ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Enter your email"
+              placeholder="Enter your email or 10-digit mobile number"
               disabled={isLoading}
             />
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            {errors.identifier && (
+              <p className="text-red-500 text-sm mt-1">{errors.identifier}</p>
             )}
           </div>
 
@@ -133,11 +135,17 @@ export function SignIn() {
         </form>
 
         {/* Sign Up Link */}
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-2">
           <p className="text-gray-600">
             Don't have an account?{' '}
             <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-semibold">
               Sign Up
+            </Link>
+          </p>
+          <p className="text-gray-600">
+            Want to know more about this project?{' '}
+            <Link to="/onboard" className="text-blue-600 hover:text-blue-700 font-semibold">
+              Learn more
             </Link>
           </p>
         </div>

@@ -19,6 +19,7 @@ import { SignUp } from './pages/SignUp'
 import { SignIn } from './pages/SignIn'
 import { Profile } from './pages/Profile'
 import { EditProfile } from './pages/EditProfile'
+import { Onboard } from './pages/Onboard'
 import './styles/index.css'
 
 const topNavItems = [
@@ -412,6 +413,10 @@ export default function App() {
       <Route
         path="/signup"
         element={isAuthenticated ? <Navigate to="/" replace /> : <SignUp />}
+      />
+      <Route
+        path="/onboard"
+        element={<Onboard />}
       />
       <Route
         path="/profile"

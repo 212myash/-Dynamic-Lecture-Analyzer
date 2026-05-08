@@ -73,23 +73,25 @@ exports.signup = async (req, res) => {
  */
 exports.signin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
     // Validation
-    if (!email || !password) {
+    if (!identifier || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide email and password'
+        message: 'Please provide email or mobile number and password'
       });
     }
 
-    // Find user and select password field
-    const user = await User.findOne({ email }).select('+password');
+    // Find user by email or mobile number and select password field
+    const user = await User.findOne({
+      $or: [{ email: identifier }, { mobileNumber: identifier }]
+    }).select('+password');
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Invalid email/mobile number or password'
       });
     }
 
